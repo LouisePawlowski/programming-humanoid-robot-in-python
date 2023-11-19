@@ -21,7 +21,13 @@
 
 
 from pid import PIDAgent
+import numpy as np
 from keyframes import hello
+from keyframes import wipe_forehead
+from keyframes import leftBackToStand
+from keyframes import leftBellyToStand
+from keyframes import rightBackToStand
+from keyframes import rightBellyToStand
 
 
 class AngleInterpolationAgent(PIDAgent):
@@ -35,17 +41,41 @@ class AngleInterpolationAgent(PIDAgent):
 
     def think(self, perception):
         target_joints = self.angle_interpolation(self.keyframes, perception)
-        target_joints['RHipYawPitch'] = target_joints['LHipYawPitch'] # copy missing joint in keyframes
+        if 'LHipYawPitch' in target_joints:
+            target_joints['RHipYawPitch'] = target_joints['LHipYawPitch'] # copy missing joint in keyframes
         self.target_joints.update(target_joints)
         return super(AngleInterpolationAgent, self).think(perception)
 
     def angle_interpolation(self, keyframes, perception):
         target_joints = {}
         # YOUR CODE HERE
+        names, times, keys = keyframes
+        if len(times) == 0:
+            return target_joints
+        max_time = max(max(times))
 
+        current_time = perception.time
+        
+
+        while current_time > max_time:
+            current_time -= max_time
+
+        for i in range(len(names)):
+            j = -1
+            while current_time > times[i][j+1] and j + 2 < len(times[i]):
+                j += 1
+            if j+1 < len(times[i]) and j > -1:
+                P0 = keys[i][j][0]
+                P1 = keys[i][j][0] + keys[i][j][2][2]
+                P2 = keys[i][j+1][0] + keys[i][j+1][1][2]
+                P3 = keys[i][j+1][0]
+
+                t = (current_time - times[i][j]) / (times[i][j+1] - times[i][j])
+                B_t = (1-t)**3 * P0 + 3 * (1-t)**2 * t * P1 + 3*(1-t) * t**2 * P2 + t**3 * P3
+                target_joints[names[i]] = B_t
         return target_joints
 
 if __name__ == '__main__':
     agent = AngleInterpolationAgent()
-    agent.keyframes = hello()  # CHANGE DIFFERENT KEYFRAMES
+    agent.keyframes = hello() # CHANGE DIFFERENT KEYFRAMES
     agent.run()
