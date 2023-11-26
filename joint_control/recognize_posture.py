@@ -16,6 +16,8 @@ from keyframes import leftBackToStand
 import pickle
 from sklearn import svm, metrics
 from os import listdir, path
+import sys
+#sys.modules["sklearn.svm.classes"] = svm
 
 
 
@@ -28,7 +30,8 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
                  sync_mode=True):
         super(PostureRecognitionAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
         self.posture = 'unknown'
-        self.posture_classifier = pickle.load(open('robot_pose.pkl')) # LOAD YOUR CLASSIFIER
+        with open(path.join(path.dirname(__file__), 'robot_pose.pkl'), 'rb') as f:
+            self.posture_classifier = pickle.load(f)
 
     def think(self, perception):
         self.posture = self.recognize_posture(perception)
@@ -43,7 +46,7 @@ class PostureRecognitionAgent(AngleInterpolationAgent):
         for str in wanted:
             data += [perception.joint[str]]
         data += perception.imu
-        posture = listdir('robot_pose_data')[self.posture_classifier.predict([data])[0]]
+        posture = listdir(path.join(path.dirname(__file__), 'robot_pose_data'))[self.posture_classifier.predict([data])[0]]
         return posture
 
 if __name__ == '__main__':
