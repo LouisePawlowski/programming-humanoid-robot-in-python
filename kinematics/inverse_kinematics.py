@@ -124,7 +124,7 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
             for i in range(len(RLeg)):
                 names.append(RLeg[i])
                 times.append([1.0, 5.0])
-                keys.append([[0, [3, 0, 0], [3, 0, 0]], [joint_angles[i], [3, 0, 0], [3, 0, 0]]])
+                keys.append([[self.perception.joint[RLeg[i]], [3, 0, 0], [3, 0, 0]], [joint_angles[i], [3, 0, 0], [3, 0, 0]]])
         print("names = ", names)
         print("times = ", times)
         print("keys = ", keys)
